@@ -12,11 +12,6 @@ export function Studio(){return <svg className="studio-art" viewBox="0 0 900 600
  <path d="M63 18L271 14V28L63 32Z M62 232L268 223V239L62 249Z" fill="#d3c5a4"/>
  <path d="M42 0H84L64 255L23 251Q37 137 42 0M254 0H292Q276 136 295 244L258 244Z" fill="#f4edd9" stroke="#ded5bc" strokeWidth="1.5"/>
  <path d="M68 249L277 241L575 600H242Z" fill="#fff4cf" opacity=".27"/>
- <path d="M359 53L572 48L576 164L364 170Z" fill="#c7b58f" opacity=".15" transform="translate(3 6)"/>
- <path d="M359 53L572 48L576 164L364 170Z" fill="#fcf9ea" stroke="#d2c5a6" strokeWidth="1.5"/>
- <path d="M351 47L387 44L389 62L353 67ZM548 42L583 45L581 64L546 60Z" fill="#c6cbab" opacity=".8"/>
- <text x="468" y="103" textAnchor="middle" fontFamily="Georgia,serif" fontStyle="italic" fontSize="29" fill="#6a7d57" transform="rotate(-2 468 103)">Sing together.</text>
- <text x="468" y="137" textAnchor="middle" fontSize="11" letterSpacing="3" fill="#9a947d">SAME HEART, SEVEN VOICES</text>
  <g transform="translate(718 24)"><circle cx="0" cy="51" r="28" fill="#f7f4e7" stroke="#a8ad94" strokeWidth="4"/><path d="M0 31V51L13 59" stroke="#707e65" strokeWidth="2" strokeLinecap="round"/><circle cy="51" r="3" fill="#707e65"/></g>
  <g transform="translate(812 120)"><path d="M-25 94H29L22 162H-18Z" fill="#bb997b" stroke="#967e64" strokeWidth="2"/><path d="M-27 93H31V106H-27Z" fill="#ccad8a"/><path d="M2 95V-44M2 36L-25 5M3 57L34 20M1 77L-32 52" stroke="#7f8b56" strokeWidth="5"/><g fill="#829664" stroke="#6f8454" strokeWidth="1"><ellipse cx="2" cy="-37" rx="12" ry="27" transform="rotate(15 2 -37)"/><ellipse cx="-23" cy="4" rx="14" ry="27" transform="rotate(-46 -23 4)"/><ellipse cx="31" cy="20" rx="14" ry="29" transform="rotate(46 31 20)"/><ellipse cx="-29" cy="52" rx="13" ry="25" transform="rotate(-59 -29 52)"/><ellipse cx="28" cy="66" rx="13" ry="25" transform="rotate(58 28 66)"/></g></g>
  <g transform="translate(40 266)"><path d="M0 0L60 -3V104L0 108Z" fill="#48534c" stroke="#35433a" strokeWidth="2"/><path d="M7 8L53 6V95L7 98Z" fill="#5b655b"/><circle cx="30" cy="60" r="21" fill="#3f4a42"/><circle cx="30" cy="60" r="13" fill="#59645b"/><circle cx="30" cy="60" r="6" fill="#35443b"/><circle cx="30" cy="23" r="8" fill="#35443b"/><path d="M30 107V147M13 149L30 136L47 148" stroke="#465448" strokeWidth="4"/></g>
