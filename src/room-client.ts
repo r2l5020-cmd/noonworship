@@ -47,6 +47,7 @@ export class RoomClient {
  }
  async act(action:string,values:Record<string,unknown>,character:number,session:string){
   if(!this.ready)throw Error('초대코드로 방에 먼저 입장해 주세요.');
+  if(['space','spot','pose','leave'].includes(action)){if(this.moveTimer)clearTimeout(this.moveTimer);this.moveTimer=null;this.pendingMove=null;}
   const {data,error}=await this.sdk.rpc('studio_act',{p_room:this.roomId,p_session:session,p_character:character,p_action:action,p_payload:values});
   if(error){const e=Object.assign(new Error(error.message),{code:error.code});throw e;}
   if(data.event)this.apply(data.event);return data;
@@ -57,5 +58,19 @@ export class RoomClient {
   this.moveTimer=setTimeout(send,450);
  }
  async close(){this.generation++;this.socketReady=false;if(this.timer)clearInterval(this.timer);if(this.moveTimer)clearTimeout(this.moveTimer);this.pendingMove=null;this.ready=false;if(this.channel)await this.sdk.removeChannel(this.channel);this.channel=null;this.emit()}
+ async photoUrl(path:string){
+  const {data,error}=await this.sdk.storage.from('studio-photos').createSignedUrl(path,3600);
+  if(error)throw Error('사진을 불러오지 못했습니다.');return data.signedUrl as string;
+ }
+ async uploadPhoto(blob:Blob,space:string,character:number,session:string){
+  if(!this.ready)throw Error('먼저 방에 입장하세요.');
+  const {data:auth}=await this.sdk.auth.getSession();if(!auth.session)throw Error('다시 입장해 주세요.');
+  const path=this.roomId+'/'+auth.session.user.id+'/'+crypto.randomUUID()+'.jpg';
+  const bucket=this.sdk.storage.from('studio-photos');
+  const uploaded=await bucket.upload(path,blob,{contentType:'image/jpeg',upsert:false});
+  if(uploaded.error)throw Error('사진을 올리지 못했습니다. 잠시 후 다시 시도해 주세요.');
+  try{return await this.act('photo',{path,space},character,session)}
+  catch(e:any){if(e.code&&/^[0-9A-Z]{5}$/.test(e.code))await bucket.remove([path]);throw e}
+ }
 }
 export const backend=new RoomClient();

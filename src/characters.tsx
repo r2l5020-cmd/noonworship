@@ -8,21 +8,21 @@ export const characters = [
   {name:'인영',part:'메조소프라노',tag:'기린을 제일 좋아해',color:'#c29b43',bg:'#faf1ce',outfit:'#e1bc6d',hair:'#805736',glasses:false},
 ];
 export const homePositions = [[25,76],[18,56],[61,62],[44,69],[79,77],[77,49],[48,49]];
-export function Avatar({id,mood='smile',small=false}:{id:number,mood?:string,small?:boolean}) {
+export function Avatar({id,mood='smile',small=false,pose='stand'}:{id:number,mood?:string,small?:boolean,pose?:string}) {
  const c=characters[id],woman=id>2,long=[4,5,6].includes(id),curly=id===4||id===6;
- return <svg viewBox="0 0 100 148" fill="none" className={'avatar '+(small?'small-avatar':'')} aria-label={c.name+' 캐릭터'} role="img">
+ return <svg viewBox="0 0 100 148" fill="none" className={'avatar pose-'+pose+' '+(small?'small-avatar':'')} aria-label={c.name+' 캐릭터'} role="img">
   <ellipse cx="50" cy="141" rx="26" ry="5" fill="#273b2b" opacity=".13"/>
   {long&&<path d={curly?'M25 34 Q16 42 22 53 Q13 61 23 70 Q15 80 24 91 Q17 105 34 110 L73 108 Q86 99 77 87 Q87 77 78 68 Q88 55 77 48 Q81 30 63 23 Z':'M24 38Q24 17 50 17Q77 17 77 40L80 109H21Z'} fill={c.hair} stroke="#31372c" strokeWidth="1.5"/>}
-  <path d="M35 112 L34 136 Q36 140 44 137 L49 113 M52 112 L57 138 Q64 140 67 136 L64 110" fill={id===0||woman?'#65829b':'#59605c'} stroke="#38483e" strokeWidth="1.6"/>
-  <path d="M34 134L44 134L44 141H30Q29 136 34 134 M57 135H67L72 140Q72 143 57 141Z" fill={id===2?'#5e483a':'#f2eee2'} stroke="#4c5147" strokeWidth="1.4"/>
+  {pose==='sit'&&<g stroke="#695a42" strokeWidth="2"><path d="M31 97H69V120H31Z" fill="#c1a27a"/><path d="M32 118L29 142M68 118L72 142"/></g>}
+  <path d={pose==='sit'?'M35 110L23 120L35 138L44 134L36 122L51 119L65 123L59 137L68 138L78 120L63 110Z':'M35 112 L34 136 Q36 140 44 137 L49 113 M52 112 L57 138 Q64 140 67 136 L64 110'} fill={id===0||woman?'#65829b':'#59605c'} stroke="#38483e" strokeWidth="1.6"/>
+  <path d={pose==='sit'?'M34 133L43 133L45 140H30Q29 136 34 133 M58 134H68L73 141H58Z':'M34 134L44 134L44 141H30Q29 136 34 134 M57 135H67L72 140Q72 143 57 141Z'} fill={id===2?'#5e483a':'#f2eee2'} stroke="#4c5147" strokeWidth="1.4"/>
   <path d={id===4?'M33 68Q26 69 25 84L26 125Q50 133 76 125L74 83Q74 68 64 68Z':'M34 68Q28 67 25 80L25 110Q50 120 75 110L75 81Q74 69 65 68Z'} fill={c.outfit} stroke="#374438" strokeWidth="1.6"/>
   {id===2&&<><path d="M49 74V114M39 69L48 82L52 72L60 82L65 69" stroke="#897758" strokeWidth="1.4"/><path d="M57 84H66V94H57Z" fill="#bba07a"/><circle cx="52" cy="91" r="1" fill="#665c43"/><circle cx="52" cy="103" r="1" fill="#665c43"/></>}
   {id===5&&<g opacity=".65" stroke="#dae5dc" strokeWidth="2"><path d="M32 72V113M43 76V116M56 75V116M68 73V113M27 82H74M26 94H75M26 106H75"/><path d="M49 73V115" stroke="#3c554c" strokeWidth="2.5"/></g>}
   {id===4&&<g stroke="#d0d1c7" strokeWidth="1.2"><path d="M31 83H70M28 96H72M27 110H73M51 76V129"/><path d="M35 66Q50 85 64 66L69 80L53 93L33 79Z" fill="#b4c4be"/></g>}
   {(id===3||id===6)&&<><path d="M34 70Q50 86 66 70L61 85H39Z" fill={id===3?'#232b2a':'#b18a43'}/><path d="M42 85L40 96M58 85L60 96" stroke="#e6d8b6" strokeWidth="1.4"/><path d="M36 100H64L61 110H40Z" stroke="#262b26" opacity=".4"/></>}
   {id===6&&<g fill="#956a31" opacity=".9"><path d="M29 83L36 80L38 89L31 92ZM66 94L73 91L75 99L68 102ZM43 98L51 95L54 102L48 109ZM60 76L65 80L60 87L55 82Z"/><path d="M30 101L36 104L33 111H26Z"/></g>}
-  <path d="M29 78Q22 79 21 91L24 108Q27 112 31 108L31 87M71 78Q78 78 80 91L77 108Q73 112 69 108L69 88" fill={c.outfit} stroke="#374438" strokeWidth="1.6"/>
-  <ellipse cx="28" cy="109" rx="5" ry="6" fill="#efc9a4" stroke="#776347" strokeWidth="1"/><ellipse cx="73" cy="109" rx="5" ry="6" fill="#efc9a4" stroke="#776347" strokeWidth="1"/>
+  {pose==='wave'?<g><path d="M29 78Q22 79 21 91L24 108Q27 112 31 108L31 87" fill={c.outfit} stroke="#374438" strokeWidth="1.6"/><ellipse cx="28" cy="109" rx="5" ry="6" fill="#efc9a4"/><g className="gesture-wave"><path d="M70 77Q82 71 84 50L92 51Q94 80 75 89Z" fill={c.outfit} stroke="#374438" strokeWidth="1.6"/><path d="M84 51L80 43Q79 40 82 41L86 45L85 34Q86 30 88 35L89 42L92 34Q95 32 95 36L93 44Q101 42 99 46L93 53Z" fill="#efc9a4" stroke="#776347"/></g></g>:pose==='clap'?<g><path d="M28 80Q29 94 45 91L49 83L37 85L36 77M72 80Q70 94 55 91L51 83L63 85L64 77" fill={c.outfit} stroke="#374438" strokeWidth="1.6"/><g className="gesture-clap"><ellipse cx="47" cy="84" rx="5" ry="8" fill="#efc9a4" stroke="#776347"/><ellipse cx="54" cy="83" rx="5" ry="8" fill="#efc9a4" stroke="#776347"/></g></g>:<><path d="M29 78Q22 79 21 91L24 108Q27 112 31 108L31 87M71 78Q78 78 80 91L77 108Q73 112 69 108L69 88" fill={c.outfit} stroke="#374438" strokeWidth="1.6"/><ellipse cx="28" cy="109" rx="5" ry="6" fill="#efc9a4" stroke="#776347" strokeWidth="1"/><ellipse cx="73" cy="109" rx="5" ry="6" fill="#efc9a4" stroke="#776347" strokeWidth="1"/></>}
   <path d="M43 62V73Q50 79 57 73V61" fill="#e8bd96" stroke="#79634c" strokeWidth="1"/>
   {id===3&&<path d="M23 40Q19 17 47 17Q78 14 78 44L76 71L62 76L64 46H36L37 75L23 68Z" fill={c.hair} stroke="#3e392c" strokeWidth="1.5"/>}
   <ellipse cx="27" cy="46" rx="5" ry="7" fill="#eec5a0"/><ellipse cx="73" cy="46" rx="5" ry="7" fill="#eec5a0"/>
