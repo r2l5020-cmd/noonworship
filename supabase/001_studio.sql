@@ -1,6 +1,9 @@
 -- Apply once in a dedicated Supabase project. No secret keys or invitation codes belong in this file.
 begin;
 create extension if not exists pgcrypto with schema extensions;
+create schema studio_private;
+revoke all on schema studio_private from public,anon;
+grant usage on schema studio_private to authenticated;
 create table public.studio_rooms (
   id uuid primary key default gen_random_uuid(), name text not null,
   invite_hash text not null, running boolean not null default false,
@@ -26,6 +29,8 @@ create table public.studio_chats (
   text text not null check(length(text) between 1 and 300), at bigint not null
 );
 create index studio_chats_room_id on public.studio_chats(room_id,id desc);
+create index studio_memberships_user_id on public.studio_memberships(user_id);
+create index studio_actors_user_id on public.studio_actors(user_id);
 create sequence public.studio_event_seq;
 alter table public.studio_rooms enable row level security;
 alter table public.studio_memberships enable row level security;
@@ -35,7 +40,7 @@ revoke all on public.studio_rooms,public.studio_memberships,public.studio_actors
 revoke all on sequence public.studio_event_seq from anon,authenticated;
 
 create function public.studio_is_member(p_room uuid) returns boolean
-language sql stable security definer set search_path='' as $$
+language sql stable security invoker set search_path='' as $$
  select exists(select 1 from public.studio_memberships where room_id=p_room and user_id=(select auth.uid()));
 $$;
 revoke all on function public.studio_is_member(uuid) from public,anon;
@@ -52,7 +57,7 @@ grant select on public.studio_memberships to authenticated;
 create policy studio_own_membership on public.studio_memberships for select to authenticated
  using(user_id=(select auth.uid()));
 
-create function public.studio_enter(p_code text) returns uuid
+create function studio_private.studio_enter(p_code text) returns uuid
 language plpgsql security definer set search_path='' as $$
 declare v_room uuid;
 begin
@@ -68,7 +73,7 @@ begin
 end;
 $$;
 
-create function public.studio_snapshot(p_room uuid) returns jsonb
+create function studio_private.studio_snapshot(p_room uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare v_now bigint:=(extract(epoch from clock_timestamp())*1000)::bigint; v_result jsonb;
 begin
@@ -82,7 +87,7 @@ begin
 end;
 $$;
 
-create function public.studio_act(p_room uuid,p_session uuid,p_character integer,p_action text,p_payload jsonb default '{}'::jsonb) returns jsonb
+create function studio_private.studio_act(p_room uuid,p_session uuid,p_character integer,p_action text,p_payload jsonb default '{}'::jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
  v_now bigint:=(extract(epoch from clock_timestamp())*1000)::bigint;
@@ -152,6 +157,14 @@ begin
  return jsonb_build_object('ok',true,'now',v_now,'event',v_event);
 end;
 $$;
+revoke all on function studio_private.studio_enter(text),studio_private.studio_snapshot(uuid),studio_private.studio_act(uuid,uuid,integer,text,jsonb) from public,anon;
+grant execute on function studio_private.studio_enter(text),studio_private.studio_snapshot(uuid),studio_private.studio_act(uuid,uuid,integer,text,jsonb) to authenticated;
+create function public.studio_enter(p_code text) returns uuid
+language sql security invoker set search_path='' as $$ select studio_private.studio_enter(p_code); $$;
+create function public.studio_snapshot(p_room uuid) returns jsonb
+language sql security invoker set search_path='' as $$ select studio_private.studio_snapshot(p_room); $$;
+create function public.studio_act(p_room uuid,p_session uuid,p_character integer,p_action text,p_payload jsonb default '{}'::jsonb) returns jsonb
+language sql security invoker set search_path='' as $$ select studio_private.studio_act(p_room,p_session,p_character,p_action,p_payload); $$;
 revoke all on function public.studio_enter(text),public.studio_snapshot(uuid),public.studio_act(uuid,uuid,integer,text,jsonb) from public,anon;
 grant execute on function public.studio_enter(text),public.studio_snapshot(uuid),public.studio_act(uuid,uuid,integer,text,jsonb) to authenticated;
 commit;
