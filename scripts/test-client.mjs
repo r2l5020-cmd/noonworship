@@ -18,6 +18,11 @@ state=applyRoomEvent(state,{id:6,at:3001,type:'jam',jam:{running:1,tempo:100,sta
 state=applyRoomEvent(state,{id:7,at:2500,type:'jam',jam:{running:0,tempo:84,started:5500}});assert.equal(state.jam.running,1);
 state=applyRoomEvent(state,{id:8,at:3100,type:'note',character:5,note:3,instrument:'piano'});state=applyRoomEvent(state,{id:8,at:3100,type:'note',character:5,note:3,instrument:'piano'});assert.equal(state.events.length,1);
 let eventHandler,statusHandler,actionCalls=[],snapshotPending=null;
+const photo={id:'photo-one',space:'forest',path:'private/photo.jpg',character:0,at:3200};
+state=applyRoomEvent(state,{id:9,at:3200,type:'photo',photo});state=applyRoomEvent(state,{id:9,at:3200,type:'photo',photo});assert.equal(state.photos.length,1);
+state=applyRoomEvent(state,{id:10,at:3300,type:'actor',actor:{character:0,x:84,y:57,mood:'smile',seen:3300,space:'hall',pose:'sit',spot:'keyboard'}});assert.equal(state.members[0].spot,'keyboard');
+state=applyRoomEvent(state,{id:11,at:3200,type:'actor',actor:{character:0,x:30,y:70,mood:'smile',seen:3200,space:'forest',pose:'stand',spot:null}});assert.equal(state.members[0].space,'hall');
+state=applyRoomEvent(state,{id:12,at:3400,type:'note',character:0,note:0,instrument:'guitar',space:'forest'});assert.equal(state.events.at(-1).space,'forest');
 const now=Date.now();const snapshot=()=>({...emptyRoom(),now:Date.now()});
 const sdk={auth:{getSession:async()=>({data:{session:{access_token:'test'}}}),onAuthStateChange:()=>{}},realtime:{setAuth:async()=>{}},removeChannel:async()=>{},channel:()=>({on(_type,_event,fn){eventHandler=fn;return this},subscribe(fn){statusHandler=fn;queueMicrotask(()=>fn('SUBSCRIBED'));return this}}),rpc:async(name,args)=>{
  if(name==='studio_enter')return {data:'test-room'};
@@ -30,6 +35,7 @@ const {RoomClient}=await import(url(clientCode));const client=new RoomClient();a
 await client.open('a-long-invite-code');
 client.move({x:20,y:50},0,'session',assert.fail);client.move({x:70,y:75},0,'session',assert.fail);
 await new Promise(r=>setTimeout(r,510));assert.equal(actionCalls.length,1);assert.equal(actionCalls[0].p_payload.x,70);
+const beforeTravel=actionCalls.length;client.move({x:30,y:70},0,'session',assert.fail);await client.act('space',{space:'forest'},0,'session');await new Promise(r=>setTimeout(r,510));assert.equal(actionCalls.length,beforeTravel+1);assert.equal(actionCalls.at(-1).p_action,'space');
 let release;snapshotPending=new Promise(r=>release=r);const syncing=client.sync();eventHandler({payload:{id:100,type:'chat',at:Date.now(),message:{id:9,character:5,text:'snapshot race',at:Date.now()}}});release({data:snapshot()});await syncing;snapshotPending=null;assert.equal(client.read().messages.at(-1).text,'snapshot race');
 let online=true;client.onChange((_s,connected)=>online=connected);await statusHandler('CHANNEL_ERROR');assert.equal(online,false);await statusHandler('SUBSCRIBED');assert.equal(online,true);
 await client.close();
