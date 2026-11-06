@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+import {fileURLToPath} from 'node:url';
+process.chdir(fileURLToPath(new URL('..',import.meta.url)));
+const compile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const url=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
+const stateUrl=url(compile(fs.readFileSync('src/room-state.ts','utf8')));
+const {applyRoomEvent,emptyRoom}=await import(stateUrl);
+let state={...emptyRoom(),now:1000};
+const chat={id:1,at:2000,type:'chat',message:{id:5,character:0,text:'안녕',at:2000}};
+state=applyRoomEvent(state,chat);state=applyRoomEvent(state,chat);assert.equal(state.messages.length,1);
+state=applyRoomEvent(state,{id:2,at:2001,type:'actor',actor:{character:0,x:20,y:60,mood:'smile',seen:2001}});
+state=applyRoomEvent(state,{id:3,at:2002,type:'actor',actor:{character:0,x:10,y:60,mood:'smile',seen:1000}});assert.equal(state.members[0].x,20);
+state=applyRoomEvent(state,{id:4,at:1000,type:'leave',character:0});assert.equal(state.members.length,1);
+state=applyRoomEvent(state,{id:5,at:3000,type:'leave',character:0});assert.equal(state.members.length,0);
+state=applyRoomEvent(state,{id:6,at:3001,type:'jam',jam:{running:1,tempo:100,started:6001}});
+state=applyRoomEvent(state,{id:7,at:2500,type:'jam',jam:{running:0,tempo:84,started:5500}});assert.equal(state.jam.running,1);
+state=applyRoomEvent(state,{id:8,at:3100,type:'note',character:5,note:3,instrument:'piano'});state=applyRoomEvent(state,{id:8,at:3100,type:'note',character:5,note:3,instrument:'piano'});assert.equal(state.events.length,1);
+let eventHandler,statusHandler,actionCalls=[],snapshotPending=null;
+const now=Date.now();const snapshot=()=>({...emptyRoom(),now:Date.now()});
+const sdk={auth:{getSession:async()=>({data:{session:{access_token:'test'}}}),onAuthStateChange:()=>{}},realtime:{setAuth:async()=>{}},removeChannel:async()=>{},channel:()=>({on(_type,_event,fn){eventHandler=fn;return this},subscribe(fn){statusHandler=fn;queueMicrotask(()=>fn('SUBSCRIBED'));return this}}),rpc:async(name,args)=>{
+ if(name==='studio_enter')return {data:'test-room'};
+ if(name==='studio_snapshot'){if(snapshotPending)return await snapshotPending;return {data:snapshot()}}
+ actionCalls.push(args);return {data:{ok:true,now:Date.now()}};
+}};
+globalThis.window={STUDIO_CONFIG:{supabaseUrl:'https://example.supabase.co',publishableKey:'sb_publishable_example'},supabase:{createClient:()=>sdk}};
+const clientCode=compile(fs.readFileSync('src/room-client.ts','utf8')).replace("'./room-state'",JSON.stringify(stateUrl));
+const {RoomClient}=await import(url(clientCode));const client=new RoomClient();assert.equal(client.configured,true);
+await client.open('a-long-invite-code');
+client.move({x:20,y:50},0,'session',assert.fail);client.move({x:70,y:75},0,'session',assert.fail);
+await new Promise(r=>setTimeout(r,510));assert.equal(actionCalls.length,1);assert.equal(actionCalls[0].p_payload.x,70);
+let release;snapshotPending=new Promise(r=>release=r);const syncing=client.sync();eventHandler({payload:{id:100,type:'chat',at:Date.now(),message:{id:9,character:5,text:'snapshot race',at:Date.now()}}});release({data:snapshot()});await syncing;snapshotPending=null;assert.equal(client.read().messages.at(-1).text,'snapshot race');
+let online=true;client.onChange((_s,connected)=>online=connected);await statusHandler('CHANNEL_ERROR');assert.equal(online,false);await statusHandler('SUBSCRIBED');assert.equal(online,true);
+await client.close();
+console.log('PASS: duplicate events, stale actor/leave/jam events, note deduplication, last movement delivery, snapshot race, disconnect and resubscribe');
